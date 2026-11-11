@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Tabla de Aislación</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Aislación">
+<meta name="theme-color" content="#1d4f91">
+<style>
+@font-face{font-family:"Inter";font-weight:400;font-style:normal;font-display:swap;src:url("fonts/inter-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"Inter";font-weight:500;font-style:normal;font-display:swap;src:url("fonts/inter-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"Inter";font-weight:600;font-style:normal;font-display:swap;src:url("fonts/inter-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:500;font-style:normal;font-display:swap;src:url("fonts/barlow-condensed-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:600;font-style:normal;font-display:swap;src:url("fonts/barlow-condensed-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:700;font-style:normal;font-display:swap;src:url("fonts/barlow-condensed-latin-700-normal.woff2") format("woff2")}
+/* Layout: one-column field tool — pickers on top, result sheet below, full tables in a second tab */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --fg:#17202b; --muted:#5d6977; --line:#d3d9e1;
+  --accent:#1d4f91; --accent-fg:#ffffff; --accent-soft:#dbe6f5; --mark:#fff2b8; --mark-fg:#17202b;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141b; --surface:#18202b; --fg:#e7ecf2; --muted:#9aa6b4; --line:#2b3644;
+  --accent:#6ea4ee; --accent-fg:#0b1320; --accent-soft:#1d2d44; --mark:#5a4b12; --mark-fg:#fff6d6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141b; --surface:#18202b; --fg:#e7ecf2; --muted:#9aa6b4; --line:#2b3644;
+  --accent:#6ea4ee; --accent-fg:#0b1320; --accent-soft:#1d2d44; --mark:#5a4b12; --mark-fg:#fff6d6; color-scheme:dark}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:700;font-size:1.9rem;letter-spacing:.01em;margin:0;text-transform:uppercase;line-height:1}
+.tabs{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.tabs button{font:600 .9rem var(--body);border:0;background:transparent;color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
+.label{font-family:var(--display);font-weight:600;font-size:1rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px;display:flex;justify-content:space-between}
+.label b{color:var(--fg);font-weight:700}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.chips button{font:600 1.15rem var(--display);font-variant-numeric:tabular-nums;min-height:46px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;cursor:pointer;padding:4px 2px}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.chips button:disabled{opacity:.35;cursor:not-allowed}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.unit{font-size:.75em;opacity:.7;margin-left:1px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sheet-top{display:flex;align-items:center;gap:16px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.letter{font:700 3.6rem/1 var(--display);color:var(--accent);min-width:1.4em;text-align:center}
+.sel{font-size:.95rem;color:var(--muted)}
+.sel strong{color:var(--fg);font-weight:600}
+.grid{display:grid;grid-template-columns:1fr 1fr;}
+.cell{padding:12px 16px;border-bottom:1px solid var(--line)}
+.cell:nth-child(odd){border-right:1px solid var(--line)}
+.cell .k{font:600 .85rem var(--display);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.cell .v{font:700 1.9rem/1.1 var(--display);font-variant-numeric:tabular-nums}
+.group{grid-column:1/-1;padding:8px 16px;background:var(--accent-soft);font:700 .9rem var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--fg);border-bottom:1px solid var(--line)}
+.cell.full{grid-column:1/-1;border-right:0}
+.v .fr{font-size:.62em;margin-left:.12em;vertical-align:.38em}
+.empty{padding:22px 16px;color:var(--muted)}
+.note{font-size:.85rem;color:var(--muted);margin:0}
+.tblbox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;width:100%}
+th,td{border:1px solid var(--line);padding:7px 8px;text-align:center;white-space:nowrap}
+thead th{font:700 .95rem var(--display);text-transform:uppercase;letter-spacing:.04em;background:var(--accent-soft);position:sticky;top:0}
+tbody th{font:700 1rem var(--display);background:var(--accent-soft);position:sticky;left:0}
+td{font:600 1.05rem var(--display)}
+tr.hl td,tr.hl th,td.hl{background:var(--mark);color:var(--mark-fg)}
+td.hit{background:var(--accent);color:var(--accent-fg)}
+tbody tr{cursor:pointer}
+h2{font:700 1.3rem var(--display);text-transform:uppercase;margin:4px 0 0;letter-spacing:.02em}
+@media (prefers-reduced-motion:no-preference){.chips button,.tabs button{transition:background .12s,color .12s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Tabla de Aislación</h1>
+    <div class="tabs" role="tablist">
+      <button id="tab-calc" role="tab" aria-selected="true">Buscar</button>
+      <button id="tab-tablas" role="tab" aria-selected="false">Tablas</button>
+    </div>
+  </header>
+
+  <main id="view-calc" style="display:flex;flex-direction:column;gap:16px">
+    <section>
+      <p class="label"><span>Pipa</span><b id="lbl-pipa"></b></p>
+      <div class="chips" id="chips-pipa"></div>
+    </section>
+    <section>
+      <p class="label"><span>Espesor de aislación</span><b id="lbl-esp"></b></p>
+      <div class="chips" id="chips-esp"></div>
+    </section>
+    <section class="sheet" id="result" aria-live="polite"></section>
+    <p class="note">Todas las medidas en pulgadas. Corte de lámina aproximado a 1/4" (±).</p>
+  </main>
+
+  <main id="view-tablas" hidden style="flex-direction:column;gap:12px">
+    <h2>Espesor de aislación</h2>
+    <p class="note">Fila = pipa, columna = espesor. Toque una letra para ver sus medidas.</p>
+    <div class="tblbox"><table id="t-esp"></table></div>
+    <h2>Medidas y corte de lámina</h2>
+    <div class="tblbox"><table id="t-corte"></table></div>
+  </main>
+</div>
+<script>
+const D = {"pipas": ["1/2", "3/4", "1", "1 1/4", "1 1/2", "2", "2 1/2", "3", "3 1/2", "4", "4 1/2", "5", "6", "7", "8", "9", "10", "11", "12", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"], "esp": ["1", "1 1/2", "2", "2 1/2", "3", "3 1/2", "4", "4 1/2", "5", "5 1/2", "6"], "tabla": [["A", "C", "E", "G", "H", "I", "J", "K", "L", "M", "N"], ["A", "C", "E", "G", "H", "I", "J", "K", "L", "M", "N"], ["B", "D", "F", "G", "H", "I", "J", "K", "L", "M", "N"], ["B", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"], ["C", "E", "G", "H", "I", "J", "K", "L", "M", "N", "O"], ["D", "F", "G", "H", "I", "J", "K", "L", "M", "N", "P"], ["E", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"], ["F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"], ["G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q"], ["G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q"], ["H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R"], ["H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R"], ["I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S"], ["", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"], ["", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U"], ["", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V"], ["", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"], ["", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X"], ["", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y"], ["", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"], ["", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A1"], ["", "S", "T", "U", "V", "W", "X", "Y", "Z", "A1", "B1"], ["", "T", "U", "V", "W", "X", "Y", "Z", "A1", "B1", "C1"], ["", "U", "V", "W", "X", "Y", "Z", "A1", "B1", "C1", "D1"], ["", "V", "W", "X", "Y", "Z", "A1", "B1", "C1", "D1", ""], ["", "W", "X", "Y", "Z", "A1", "B1", "C1", "D1", "", ""], ["", "X", "Y", "Z", "A1", "B1", "C1", "D1", "", "", ""], ["", "Y", "Z", "A1", "B1", "C1", "D1", "", "", "", ""], ["", "Z", "A1", "B1", "C1", "D1", "", "", "", "", ""], ["", "A1", "B1", "C1", "D1", "", "", "", "", "", ""]], "corte": [["A", "3", "9 7/16", "11", "11 1/2", "12 1/2", "15 1/2", "17 1/2"], ["B", "3 5/8", "11 3/8", "13", "13 1/2", "14 1/2", "17 1/2", "19 1/2"], ["C", "4 1/8", "12 15/16", "14 1/2", "15", "16", "19", "21"], ["D", "4 5/8", "14 9/16", "16", "16 1/2", "17 1/2", "20 1/2", "22 1/2"], ["E", "5 1/8", "16 1/8", "17 1/2", "18", "19", "22", "24"], ["F", "5 11/16", "17 7/8", "19 1/4", "19 3/4", "20 3/4", "23 3/4", "26"], ["G", "6 3/4", "21 3/16", "22 3/4", "23 1/4", "24 1/4", "27 1/4", "29"], ["H", "7 3/4", "24 3/8", "25 3/4", "26 1/4", "27 1/4", "30 1/4", "32 1/2"], ["I", "8 3/4", "27 1/2", "29", "29 1/2", "30 1/2", "33 1/2", "35 1/2"], ["J", "9 3/4", "30 5/8", "32 1/4", "32 3/4", "33 3/4", "36 3/4", "38 1/2"], ["K", "10 7/8", "34 3/16", "35 3/4", "36 1/4", "37 1/4", "40 1/4", "42"], ["L", "11 7/8", "37 5/16", "38 3/4", "39 1/4", "40 1/4", "43 1/4", "45 1/2"], ["M", "12 7/8", "40 7/16", "42", "42 1/2", "43 1/2", "46 1/2", "48 1/2"], ["N", "14 3/16", "44 9/16", "46", "46 1/2", "47 1/2", "50 1/2", "52 1/2"], ["O", "15 3/16", "47 3/4", "49 1/4", "49 3/4", "50 3/4", "53 3/4", "55 1/2"], ["P", "16 3/16", "50 7/8", "52 1/4", "52 3/4", "53 3/4", "56 3/4", "59"], ["Q", "17 3/16", "54", "55 1/2", "56", "57", "60", "62"], ["R", "18 3/16", "57 1/8", "58 3/4", "59 1/4", "60 1/4", "63 1/4", "65"], ["S", "19 3/16", "60 5/16", "61 3/4", "62 1/4", "63 1/4", "66 1/4", "68 1/2"], ["T", "20 3/16", "63 7/16", "65", "65 1/2", "66 1/2", "69 1/2", "71 1/2"], ["U", "21 3/16", "66 9/16", "68", "68 1/2", "69 1/2", "72 1/2", "74 1/2"], ["V", "22 3/16", "69 11/16", "71 1/4", "71 3/4", "72 3/4", "75 3/4", "77 1/2"], ["W", "23 3/16", "72 7/8", "74 1/4", "74 3/4", "75 3/4", "78 3/4", "81"], ["X", "24 3/16", "76", "77 1/2", "78", "79", "82", "84"], ["Y", "25 3/16", "79 1/8", "80 3/4", "81 1/4", "82 1/4", "85 1/4", "87"], ["Z", "26 3/16", "82 1/4", "83 3/4", "84 1/4", "85 1/4", "88 1/4", "90 1/2"], ["A1", "27 3/16", "85 1/2", "87", "87 1/2", "88 1/2", "91 1/2", "93 1/2"], ["B1", "28 3/16", "88 1/2", "90", "90 1/2", "91 1/2", "94 1/2", "96 1/2"], ["C1", "29 3/16", "91 3/4", "93 1/4", "93 3/4", "94 3/4", "97 3/4", "99 1/2"], ["D1", "30 3/16", "94 3/4", "96 1/4", "96 3/4", "97 3/4", "100 3/4", "103"]]}
+;
+const $ = s => document.querySelector(s);
+const store = {
+  get(){ try { return JSON.parse(localStorage.getItem('aisl') || 'null'); } catch(e){ return null; } },
+  set(v){ try { localStorage.setItem('aisl', JSON.stringify(v)); } catch(e){} }
+};
+let st = store.get() || { p: D.pipas.indexOf('2'), e: D.esp.indexOf('1 1/2') };
+if (!(st.p >= 0 && st.p < D.pipas.length)) st.p = 5;
+if (!(st.e >= 0 && st.e < D.esp.length)) st.e = 1;
+
+const fmt = s => {
+  const parts = s.trim().split(/\s+/);
+  if (parts.length === 2) return `${parts[0]}<span class="fr">${parts[1]}</span>`;
+  if (parts[0].includes('/')) return `<span class="fr" style="margin:0">${parts[0]}</span>`;
+  return parts[0];
+};
+const corteFor = L => D.corte.find(r => r[0] === L);
+
+function chips(el, items, sel, onPick, disabledFn){
+  el.innerHTML = '';
+  items.forEach((t, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.id = el.id + '-' + i;
+    b.innerHTML = t + '<span class="unit">"</span>';
+    b.setAttribute('aria-pressed', i === sel);
+    if (disabledFn && disabledFn(i)) b.disabled = true;
+    b.onclick = () => onPick(i);
+    el.appendChild(b);
+  });
+}
+
+function render(){
+  store.set(st);
+  chips($('#chips-pipa'), D.pipas, st.p, i => { st.p = i; render(); });
+  chips($('#chips-esp'), D.esp, st.e, i => { st.e = i; render(); try { $('#result').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' }); } catch(e){} }, i => !D.tabla[st.p][i]);
+  $('#lbl-pipa').textContent = D.pipas[st.p] + '"';
+  $('#lbl-esp').textContent = D.esp[st.e] + '"';
+  const L = D.tabla[st.p][st.e];
+  const r = $('#result');
+  if (!L) {
+    r.innerHTML = `<div class="empty">La tabla no tiene medida para pipa de ${D.pipas[st.p]}" con aislación de ${D.esp[st.e]}". Elija otro espesor.</div>`;
+  } else {
+    const c = corteFor(L);
+    r.innerHTML = `
+      <div class="sheet-top"><div class="letter">${L}</div>
+        <div class="sel">Pipa <strong>${D.pipas[st.p]}"</strong><br>Aislación <strong>${D.esp[st.e]}"</strong></div></div>
+      <div class="grid">
+        <div class="group">Medidas de aislación</div>
+        <div class="cell"><div class="k">Diámetro</div><div class="v">${fmt(c[1])}</div></div>
+        <div class="cell"><div class="k">Circunferencia</div><div class="v">${fmt(c[2])}</div></div>
+        <div class="group">Corte de lámina</div>
+        <div class="cell"><div class="k">+1.5</div><div class="v">${fmt(c[3])}</div></div>
+        <div class="cell"><div class="k">+2</div><div class="v">${fmt(c[4])}</div></div>
+        <div class="cell full"><div class="k">+3</div><div class="v">${fmt(c[5])}</div></div>
+        <div class="group">Bandas</div>
+        <div class="cell"><div class="k">+6</div><div class="v">${fmt(c[6])}</div></div>
+        <div class="cell"><div class="k">+8</div><div class="v">${fmt(c[7])}</div></div>
+      </div>`;
+  }
+  renderTables(L);
+}
+
+function renderTables(L){
+  let h = '<thead><tr><th>Pipa</th>' + D.esp.map(e => `<th>${e}</th>`).join('') + '</tr></thead><tbody>';
+  D.pipas.forEach((p, i) => {
+    h += `<tr><th>${p}</th>` + D.tabla[i].map((x, j) =>
+      `<td data-p="${i}" data-e="${j}" class="${i === st.p && j === st.e ? 'hit' : ''}">${x || ''}</td>`).join('') + '</tr>';
+  });
+  $('#t-esp').innerHTML = h + '</tbody>';
+  let c = '<thead><tr><th></th><th>Diám.</th><th>Circ.</th><th>+1.5</th><th>+2</th><th>+3</th><th>Banda +6</th><th>Banda +8</th></tr></thead><tbody>';
+  D.corte.forEach(r => {
+    c += `<tr class="${r[0] === L ? 'hl' : ''}"><th>${r[0]}</th>` + r.slice(1).map(v => `<td>${v}</td>`).join('') + '</tr>';
+  });
+  $('#t-corte').innerHTML = c + '</tbody>';
+}
+
+$('#t-esp').addEventListener('click', ev => {
+  const td = ev.target.closest('td'); if (!td || !td.textContent) return;
+  st.p = +td.dataset.p; st.e = +td.dataset.e; render(); show('calc');
+});
+
+function show(v){
+  $('#view-calc').hidden = v !== 'calc';
+  $('#view-tablas').hidden = v !== 'tablas';
+  $('#view-calc').style.display = v === 'calc' ? 'flex' : 'none';
+  $('#view-tablas').style.display = v === 'tablas' ? 'flex' : 'none';
+  $('#tab-calc').setAttribute('aria-selected', v === 'calc');
+  $('#tab-tablas').setAttribute('aria-selected', v === 'tablas');
+  window.scrollTo(0, 0);
+}
+$('#tab-calc').onclick = () => show('calc');
+$('#tab-tablas').onclick = () => show('tablas');
+render();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+</script>
+
+</body>
+</html>
