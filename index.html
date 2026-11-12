@@ -265,20 +265,16 @@ function renderMedida(){
   if (isNaN(x) || x <= 0) { out.innerHTML = '<div class="res"><p class="legend">Escriba una medida en pulgadas, por ejemplo 69 o 69 1/2.</p></div>'; return; }
   const col = COLS[st.col];
   const rows = D.corte.map(r => ({ r, val: num(r.v[col.i]) })).filter(o => combosFor(o.r.L).length);
-  let below = null, above = null;
-  rows.forEach(o => {
-    if (o.val <= x && (!below || o.val > below.val)) below = o;
-    if (o.val > x && (!above || o.val < above.val)) above = o;
-  });
+  const ups = rows.filter(o => o.val >= x - 1e-9).sort((a, b) => a.val - b.val).slice(0, 2);
   const card = (o, tag) => {
     if (!o) return `<div class="res"><h3>${tag}</h3><p class="legend">No hay ninguna en la tabla.</p></div>`;
     const diff = Math.abs(x - o.val);
     return `<div class="res"><h3>${tag}</h3>
-      <div class="big">${o.r.L} · ${fmt(o.r.v[col.i])}" <small>${col.name.toLowerCase()} · ${diff < 1e-9 ? 'exacta' : (o.val < x ? 'le faltan ' : 'se pasa ') + fracTxt(diff) + '"'}</small></div>
+      <div class="big">${o.r.L} · ${fmt(o.r.v[col.i])}" <small>${col.name.toLowerCase()} · ${diff < 1e-9 ? 'exacta' : 'sobran ' + fracTxt(diff) + '"'}</small></div>
       <p class="legend">Diámetro ${o.r.v[0]}"${o.r.calc ? ' · <span class="badge">Calculado</span>' : ''}</p>
       <div class="combos">${comboBtns(combosFor(o.r.L))}</div><p class="legend">Borde punteado = calculado. Toque una combinación para ver todas sus medidas.</p></div>`;
   };
-  out.innerHTML = card(below, 'La más cercana por debajo') + card(above, 'La más cercana por arriba');
+  out.innerHTML = ups.length ? card(ups[0], 'La que sirve (igual o mayor)') + (ups[1] ? card(ups[1], 'La siguiente') : '') : card(null, 'Igual o mayor');
 }
 
 function renderTables(L){
