@@ -1,5 +1,5 @@
 // Guarda la app en el teléfono para que funcione sin internet.
-const CACHE = 'aislacion-v2';
+const CACHE = 'aislacion-v3';
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
   'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png',
@@ -16,6 +16,15 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) {
+    // Base de datos y demás servicios externos: no tocar. Solo guardar la librería de Firebase (versión fija).
+    if (url.hostname !== 'www.gstatic.com') return;
+    e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
+      const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); return res;
+    })));
+    return;
+  }
   const isPage = e.request.mode === 'navigate' || e.request.url.endsWith('.html') || e.request.url.endsWith('/');
   if (isPage) {
     // Página: primero internet (para recibir cambios), si no hay señal usa la copia guardada.
